@@ -11,6 +11,10 @@ out-tsc
 # dependencies
 node_modules
 
+# Local Facebook session settings and protection snapshots
+scripts/src/diablos/data/
+scripts/src/diablos/Nike/
+
 # IDEs and editors
 /.idea
 .project
