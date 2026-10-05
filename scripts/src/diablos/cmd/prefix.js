@@ -8,8 +8,8 @@ export default {
       await send("اكتب البادئة الجديدة بعد الأمر، مثل: !بادئة #");
       return;
     }
-    if (/\s/.test(nextPrefix) || nextPrefix.length > 4) {
-      await send("يجب أن تكون البادئة من 1 إلى 4 رموز ومن دون مسافات.");
+    if (/\s/.test(nextPrefix)) {
+      await send("يجب ألا تحتوي البادئة على مسافات.");
       return;
     }
     await state.setPrefix(threadId, nextPrefix);

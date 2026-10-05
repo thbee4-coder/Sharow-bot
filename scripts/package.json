@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "diablos": "node ./src/diablos/index.js",
+    "diablos": "node ./src/diablos/runner.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
