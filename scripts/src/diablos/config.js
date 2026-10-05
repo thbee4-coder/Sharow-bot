@@ -1,25 +1,23 @@
-const parseList = (value) =>
-  (value ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+import { readFile } from "node:fs/promises";
 
-export function readConfig(env = process.env) {
+export async function readConfig(env = process.env) {
   const developerId = env.FACEBOOK_DEVELOPER_ID?.trim();
-  const allowedThreadIds = parseList(env.FACEBOOK_ALLOWED_THREAD_IDS);
-  const appStateJson = env.FACEBOOK_APPSTATE_JSON;
+  let appStateJson = env.FACEBOOK_APPSTATE_JSON;
 
   if (!appStateJson) {
-    throw new Error("FACEBOOK_APPSTATE_JSON is missing from Replit Secrets.");
+    try {
+      appStateJson = await readFile(new URL("./appstate.json", import.meta.url), "utf8");
+    } catch (error) {
+      if (error?.code !== "ENOENT") {
+        throw new Error(`Unable to read local appstate.json: ${error.message}`);
+      }
+    }
   }
   if (!developerId || !/^\d+$/.test(developerId)) {
     throw new Error("Set FACEBOOK_DEVELOPER_ID to the developer's numeric Facebook user ID.");
   }
-  if (allowedThreadIds.length === 0) {
-    throw new Error("Set FACEBOOK_ALLOWED_THREAD_IDS to one or more approved group IDs.");
-  }
-  if (allowedThreadIds.some((threadId) => !/^\d+$/.test(threadId))) {
-    throw new Error("FACEBOOK_ALLOWED_THREAD_IDS must contain numeric Facebook group IDs.");
+  if (!appStateJson) {
+    throw new Error("Set FACEBOOK_APPSTATE_JSON in Replit Secrets or add a local appstate.json.");
   }
 
   let appState;
@@ -35,7 +33,6 @@ export function readConfig(env = process.env) {
   return {
     appState,
     developerId,
-    allowedThreadIds: new Set(allowedThreadIds),
     botName: "Diablos",
     initialPrefix: "!",
   };

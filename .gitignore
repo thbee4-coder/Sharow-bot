@@ -14,6 +14,7 @@ node_modules
 # Local Facebook session settings and protection snapshots
 scripts/src/diablos/data/
 scripts/src/diablos/Nike/
+scripts/src/diablos/appstate.json
 
 # IDEs and editors
 /.idea

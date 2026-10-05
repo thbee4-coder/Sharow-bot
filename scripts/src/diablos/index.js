@@ -1,6 +1,5 @@
 import { createRequire } from "node:module";
 import { readdir } from "node:fs/promises";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readConfig } from "./config.js";
 import { createStateStore } from "./lib/state.js";
@@ -19,7 +18,8 @@ function log(message) {
 function asParticipantId(value) {
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (value && typeof value === "object") {
-    const candidate = value.userID ?? value.uid ?? value.id;
+    const candidate =
+      value.userID ?? value.userFbId ?? value.user_fb_id ?? value.uid ?? value.id;
     if (candidate !== undefined) return String(candidate);
   }
   return null;
@@ -78,6 +78,7 @@ function connect(credentials) {
         online: true,
         updatePresence: true,
         selfListen: false,
+        listenEvents: true,
         autoReconnect: true,
         randomUserAgent: false,
       },
@@ -92,7 +93,7 @@ function connect(credentials) {
 async function main() {
   let config;
   try {
-    config = readConfig();
+    config = await readConfig();
   } catch (error) {
     log(error.message);
     process.exitCode = 1;
@@ -114,13 +115,11 @@ async function main() {
   };
   runtime.protection = createProtection(api, log);
 
-  log(`Logged in as Diablos (${botId}); listening to ${config.allowedThreadIds.size} approved group(s).`);
-  for (const threadId of config.allowedThreadIds) {
-    try {
-      await runtime.protection.scheduleRestore(threadId);
-    } catch (error) {
-      log(`Could not load protection backup for approved group ${threadId}: ${error.message}`);
-    }
+  log(`Logged in as Diablos (${botId}); commands are restricted to the configured developer.`);
+  try {
+    await runtime.protection.resumeSavedProtections();
+  } catch (error) {
+    log(`Could not resume saved protection backups: ${error.message}`);
   }
 
   const onEvent = async (error, event) => {
@@ -128,7 +127,7 @@ async function main() {
       log("Messenger listener reported a connection error.");
       return;
     }
-    if (!event?.threadID || !config.allowedThreadIds.has(String(event.threadID))) return;
+    if (!event?.threadID) return;
 
     if (event.type === "event") {
       const logType = String(event.logMessageType ?? "").toLowerCase();
@@ -137,14 +136,23 @@ async function main() {
         try {
           await sendMessage(api, joinMessage, event.threadID);
         } catch {
-          log(`Could not send the join message in approved group ${event.threadID}.`);
+          log(`Could not send the join message in group ${event.threadID}.`);
         }
       }
-      void runtime.protection.scheduleRestore(String(event.threadID));
+      void runtime.protection
+        .scheduleRestore(String(event.threadID))
+        .catch((protectionError) => {
+          log(`Could not schedule protection restore: ${protectionError.message}`);
+        });
       return;
     }
 
-    if (event.type !== "message" || !event.body || event.senderID !== config.developerId) {
+    if (
+      event.type !== "message" ||
+      event.isGroup !== true ||
+      !event.body ||
+      event.senderID !== config.developerId
+    ) {
       return;
     }
 

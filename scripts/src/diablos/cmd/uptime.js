@@ -27,7 +27,7 @@ export default {
         `الحالة: متصل`,
         `مدة التشغيل: ${formatDuration(Math.floor(process.uptime()))}`,
         `البادئة هنا: ${state.getPrefix(threadId)}`,
-        `المجموعة مسموح بها: نعم`,
+        `نطاق العمل: المجموعات التي ينضم إليها البوت`,
         `الحماية: ${protection.enabled ? "مفعلة" : "متوقفة"}`,
         `رسائل بيس النشطة: ${runtime.baseLoops.has(threadId) ? "نعم" : "لا"}`,
         `استخدام الذاكرة: ${memoryMb} MB`,

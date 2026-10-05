@@ -25,10 +25,6 @@ export default {
       await send("اكتب النص بعد الأمر، أو استخدم «بيس إيقاف» لإيقاف التكرار.");
       return;
     }
-    if (text.length > 1500) {
-      await send("النص طويل جدًا؛ الحد الأقصى 1500 حرف.");
-      return;
-    }
     if (runtime.baseLoops.has(threadId)) {
       await send("يوجد تكرار نشط بالفعل. أوقفه أولًا باستخدام «بيس إيقاف».");
       return;

@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { delay } from "./messenger.js";
@@ -148,5 +148,25 @@ export function createProtection(api, onError = () => {}) {
     };
   }
 
-  return { enable, disable, refreshFromCurrent, scheduleRestore, status };
+  async function resumeSavedProtections() {
+    let files;
+    try {
+      files = await readdir(nikeDirectory);
+    } catch (error) {
+      if (error?.code === "ENOENT") return;
+      throw error;
+    }
+    for (const file of files.filter((name) => /^\d+\.json$/.test(name))) {
+      await scheduleRestore(file.slice(0, -5));
+    }
+  }
+
+  return {
+    enable,
+    disable,
+    refreshFromCurrent,
+    scheduleRestore,
+    status,
+    resumeSavedProtections,
+  };
 }
