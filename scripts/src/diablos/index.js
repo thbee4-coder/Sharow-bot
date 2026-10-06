@@ -99,6 +99,7 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  log(`Using ${config.appStateSource} for the Facebook session.`);
 
   const [state, commands] = await Promise.all([
     createStateStore(config.initialPrefix),

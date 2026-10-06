@@ -45,15 +45,25 @@ function startBot() {
 
 async function stopBot() {
   const currentChild = child;
-  if (!currentChild || currentChild.exitCode !== null) return;
+  if (
+    !currentChild ||
+    currentChild.exitCode !== null ||
+    currentChild.signalCode !== null
+  ) {
+    return;
+  }
 
   currentChild.kill("SIGTERM");
+  let timeout;
   await Promise.race([
     once(currentChild, "exit"),
-    new Promise((resolve) => setTimeout(resolve, 5000)),
+    new Promise((resolve) => {
+      timeout = setTimeout(resolve, 5000);
+    }),
   ]);
+  clearTimeout(timeout);
 
-  if (currentChild.exitCode === null) {
+  if (currentChild.exitCode === null && currentChild.signalCode === null) {
     currentChild.kill("SIGKILL");
   }
 }
